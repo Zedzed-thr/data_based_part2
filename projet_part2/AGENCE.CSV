@@ -1,0 +1,4 @@
+ID,NOM,URL,FUSEAU_HORAIRE,TELEPHONE,SIEGE
+1,"NMBS/SNCB","http://www.belgiantrain.be/","Europe/Brussels","+326073000","Rue de France, 56 1060 Bruxelles"
+2,"Deutsche Bahn","https://www.bahn.de/","Europe/Berlin","+491806996633","Potsdamer Platz 2, 10785 Berlin, Germany"
+3,"SNCF","https://www.sncf.com/","Europe/Paris","+33892353535","2 Place aux Étoiles, 93210 Saint-Denis, France"
