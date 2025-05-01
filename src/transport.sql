@@ -78,7 +78,7 @@ CREATE TABLE HORRAIRE (
 CREATE TABLE EXCEPTION (
     SERVICE_ID INT NOT NULL,
     DATE DATE NOT NULL,
-    CODE TINYINT NOT NULL CHECK (CODE IN (1, 2)), -- 1=ajouté, 2=supprimé
+    CODE TINYINT NOT NULL CHECK (CODE IN (1, 2)), -- 1 = ajout et 2 = supprime
     PRIMARY KEY (SERVICE_ID, DATE),
     FOREIGN KEY (SERVICE_ID) REFERENCES SERVICE(ID)
 );
@@ -92,7 +92,7 @@ CREATE TABLE LANGUEPRINCIPALE (
 
 
 
--- Vue pour calculer le temps d'arrêt moyen par trajet (utilisée pour la question sur les temps d'arrêt)
+-- Vue pour calcul temps d'arrêt moyen/trajet & itineraire (pour la question 5)
 DROP VIEW IF EXISTS TEMPS_ARRET_MOYEN;
 CREATE VIEW TEMPS_ARRET_MOYEN AS
 SELECT 
@@ -111,7 +111,7 @@ WHERE
 GROUP BY 
     t.ITINERAIRE_ID, t.ID;
 
--- Vue pour les services actifs (utilisée pour afficher les services disponibles)
+-- Vue pour les services actifs (pour afficher les services disponibles -> question 4)
 DROP VIEW IF EXISTS SERVICES_ACTIFS;
 CREATE VIEW SERVICES_ACTIFS AS
 SELECT 
@@ -138,7 +138,7 @@ WHERE
 GROUP BY 
     s.ID;
 
--- Vue pour les arrêts avec nombre de trajets (utilisée pour la recherche de gares)
+-- Vue pour les arrêts avec nombre de trajets (pour la recherche de gares -> question 6)
 DROP VIEW IF EXISTS ARRETS_AVEC_TRAFIC;
 CREATE VIEW ARRETS_AVEC_TRAFIC AS
 SELECT 
