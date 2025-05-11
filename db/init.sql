@@ -1,4 +1,7 @@
--- Création de la base de données
+-- Création de la base de données 
+DROP DATABASE IF EXISTS TRANSPORT;
+CREATE DATABASE TRANSPORT; 
+USE TRANSPORT;
 DROP TABLE IF EXISTS HORRAIRE, EXCEPTION, LANGUEPRINCIPALE, ARRET_DESSERVI, TRAJET, SERVICE,  ARRET, ITINERAIRE, AGENCE;
 
 CREATE TABLE AGENCE (
@@ -90,83 +93,60 @@ CREATE TABLE LANGUEPRINCIPALE (
     FOREIGN KEY (AGENCE_ID) REFERENCES AGENCE(ID)
 );
 
-
-
--- Vue pour calcul temps d'arrêt moyen/trajet & itineraire (pour la question 5)
-DROP VIEW IF EXISTS TEMPS_ARRET_MOYEN;
-CREATE VIEW TEMPS_ARRET_MOYEN AS
+CREATE VIEW TRAJETS_INDEX AS
 SELECT 
-    t.ITINERAIRE_ID,
-    i.NOM AS NOM_ITINERAIRE,
-    t.ID AS TRAJET_ID,
-    AVG(TIMESTAMPDIFF(MINUTE, h.HEURE_ARRIVEE, h.HEURE_DEPART)) AS TEMPS_ARRET_MOYEN
+    trajet.ID AS TRAJET_ID,
+    trajet.ITINERAIRE_ID,
+    itineraire.NOM AS NOM_ITINERAIRE,
+    trajet.SERVICE_ID,
+    trajet.DIRECTION,
+    ROW_NUMBER() OVER (PARTITION BY trajet.ITINERAIRE_ID ORDER BY CAST(trajet.ID AS UNSIGNED)) AS NUMERO_TRAJET
 FROM 
-    TRAJET t
+    TRAJET trajet
 JOIN 
-    HORRAIRE h ON t.ID = h.TRAJET_ID
-JOIN 
-    ITINERAIRE i ON t.ITINERAIRE_ID = i.ID
-WHERE 
-    h.HEURE_ARRIVEE IS NOT NULL AND h.HEURE_DEPART IS NOT NULL
-GROUP BY 
-    t.ITINERAIRE_ID, t.ID;
+    ITINERAIRE itineraire ON trajet.ITINERAIRE_ID = itineraire.ID;
 
 -- Vue pour les services actifs (pour afficher les services disponibles -> question 4)
 -- création de la vue 
 
-drop view if exists all_jours_services; 
-create view all_jours_services as
-WITH RECURSIVE dates as( 
-    SELECT id,nom,date_debut,date_fin 
+drop view if exists ALL_JOURS_SERVICES; 
+create view ALL_JOURS_SERVICES as
+WITH RECURSIVE DATES as( 
+    SELECT ID,NOM,DATE_DEBUT,DATE_FIN 
     FROM SERVICE 
     UNION ALL 
-    SELECT id,nom,date_add(date_debut,INTERVAL 1 DAY),date_fin 
-    FROM dates WHERE date_add(date_debut, INTERVAL 1 DAY) <= date_fin 
+    SELECT ID,NOM,DATE_ADD(DATE_DEBUT,INTERVAL 1 DAY),DATE_FIN 
+    FROM DATES WHERE DATE_ADD(DATE_DEBUT, INTERVAL 1 DAY) <= DATE_FIN
 ) 
-select id,nom,date_debut as jour from dates; 
+select ID,NOM,DATE_DEBUT as JOUR from DATES; 
 
 -- seconde vue pour la Q4 
-drop view if exists dates_services; 
-create view dates_services as 
-select ajs.id, ajs.nom, ajs.jour
-from all_jours_services as ajs
-join service as s on s.id = ajs.id
-where ((weekday(ajs.jour) = 0 and s.LUNDI = 1) OR
-       (weekday(ajs.jour) = 1 and s.MARDI = 1) OR 
-       (weekday(ajs.jour) = 2 and s.MERCREDI = 1) OR 
-       (weekday(ajs.jour) = 3 and s.JEUDI = 1) OR 
-       (weekday(ajs.jour) = 4 and s.VENDREDI = 1) OR 
-       (weekday(ajs.jour) = 5 and s.SAMEDI = 1) OR 
-       (weekday(ajs.jour) = 6 and s.DIMANCHE = 1))
+drop view if exists DATES_SERVICES; 
+create view DATES_SERVICES as 
+select AJS.ID, AJS.NOM, AJS.JOUR
+from ALL_JOURS_SERVICES as AJS
+join SERVICE as S on S.ID = AJS.ID
+where ((weekday(AJS.JOUR) = 0 and S.LUNDI = 1) OR
+       (weekday(AJS.JOUR) = 1 and S.MARDI = 1) OR 
+       (weekday(AJS.JOUR) = 2 and S.MERCREDI = 1) OR 
+       (weekday(AJS.JOUR) = 3 and S.JEUDI = 1) OR 
+       (weekday(AJS.JOUR) = 4 and S.VENDREDI = 1) OR 
+       (weekday(AJS.JOUR) = 5 and S.SAMEDI = 1) OR 
+       (weekday(AJS.JOUR) = 6 and S.DIMANCHE = 1))
 and not exists(
     select 1 
-    from exception as e 
-    where e.code = 2 and ajs.jour = e.date)
+    from EXCEPTION as E
+    where E.CODE = 2 and AJS.JOUR = E.DATE and AJS.ID = E.SERVICE_ID)
 union 
-select e.service_id, s.nom, e.date 
-from exception as e
-join service as s on e.SERVICE_ID = s.ID 
-where e.CODE = 1;
+select E.SERVICE_ID, S.NOM, E.DATE
+from EXCEPTION as E
+join SERVICE as S on E.SERVICE_ID = S.ID 
+where E.CODE = 1;
 
--- Vue pour les arrêts avec nombre de trajets (pour la recherche de gares -> question 6)
-DROP VIEW IF EXISTS ARRETS_AVEC_TRAFIC;
-CREATE VIEW ARRETS_AVEC_TRAFIC AS
-SELECT 
-    a.ID,
-    a.NOM,
-    COUNT(DISTINCT h.TRAJET_ID) AS NB_TRAJETS,
-    SUM(CASE WHEN h.HEURE_ARRIVEE IS NOT NULL THEN 1 ELSE 0 END) AS NB_ARRIVEES,
-    SUM(CASE WHEN h.HEURE_DEPART IS NOT NULL THEN 1 ELSE 0 END) AS NB_DEPARTS
-FROM 
-    ARRET a
-LEFT JOIN 
-    HORRAIRE h ON a.ID = h.ARRET_ID
-GROUP BY 
-    a.ID, a.NOM;
 
 
 -- 2. Chargement des données depuis les CSV
-LOAD DATA INFILE 'C:/csv_files/AGENCE.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/AGENCE.csv'
 IGNORE INTO TABLE AGENCE
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
@@ -174,7 +154,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (ID,NOM, URL, FUSEAU_HORAIRE, TELEPHONE, SIEGE);
 
-LOAD DATA INFILE 'C:/csv_files/ARRET.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/ARRET.csv'
 IGNORE INTO TABLE ARRET
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
@@ -183,7 +163,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (ID, NOM, LATITUDE, LONGITUDE);
 
-LOAD DATA INFILE 'C:/csv_files/ITINERAIRE.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/ITINERAIRE.csv'
 IGNORE INTO TABLE ITINERAIRE
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
@@ -192,14 +172,14 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (ID,AGENCE_ID,TYPE,NOM);
 
-LOAD DATA INFILE 'C:/csv_files/ARRET_DESSERVI.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/ARRET_DESSERVI.csv'
 IGNORE INTO TABLE ARRET_DESSERVI
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (ITINERAIRE_ID,ARRET_ID,SEQUENCE);
 
-LOAD DATA INFILE 'C:/csv_files/SERVICE.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/SERVICE.csv'
 IGNORE INTO TABLE SERVICE
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
@@ -208,14 +188,14 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (ID,NOM, LUNDI, MARDI, MERCREDI, JEUDI, VENDREDI, SAMEDI, DIMANCHE, DATE_DEBUT, DATE_FIN);
 
-LOAD DATA INFILE 'C:/csv_files/TRAJET.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/TRAJET.csv'
 IGNORE INTO TABLE TRAJET
 FIELDS TERMINATED BY ',' 
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (ID,SERVICE_ID, ITINERAIRE_ID, DIRECTION);
 
-LOAD DATA INFILE 'C:/csv_files/HORRAIRE.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/HORRAIRE.csv'
 IGNORE INTO TABLE HORRAIRE
 FIELDS TERMINATED BY ',' 
 LINES TERMINATED BY '\n'
@@ -225,7 +205,7 @@ SET
     HEURE_ARRIVEE = NULLIF(@HEURE_ARRIVEE, ''),
     HEURE_DEPART = NULLIF(@HEURE_DEPART, '');
 
-LOAD DATA INFILE 'C:/csv_files/EXCEPTION.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/EXCEPTION.csv'
 IGNORE INTO TABLE EXCEPTION
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
@@ -233,7 +213,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (SERVICE_ID, DATE, CODE);
 
-LOAD DATA INFILE 'C:/csv_files/LANGUEPRINCIPALE.csv'
+LOAD DATA INFILE '/docker-entrypoint-initdb.d/data/LANGUEPRINCIPALE.csv'
 IGNORE INTO TABLE LANGUEPRINCIPALE
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
