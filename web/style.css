@@ -65,18 +65,33 @@ input[type="submit"]:hover {
 table { border-collapse: collapse; width: 100%; margin-top: 20px; }
 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
 th { background-color: #f2f2f2; }
-tr:nth-child(even) { background-color: #f9f9f9; }
+tr:nth-child(even) { background-color: #f9f9f9; } 
+
+header{
+    background: #fff;                 
+    box-shadow: 0 2px 4px rgba(0,0,0,.1); 
+    font-family: system-ui, sans-serif;
+}
 
 .navigation { margin-bottom: 20px; }
 .navigation a { padding: 10px; margin-right: 5px; background-color: #eee; text-decoration: none; color: #333; }
 .navigation a.active { background-color: #4CAF50; color: white; }
 
+
 .day{
     display:flex;                 
     justify-content:space-between;
-    margin:.4rem 0;       
+    margin:.4rem 0;    
 }
 
+.day{                       
+    align-items:center;     
+}
+
+.day input[type="checkbox"]{
+    width:auto;             
+    margin-bottom:0;        
+}
 
 textarea,button{
     width:100%;           
@@ -93,4 +108,20 @@ button{
     cursor:pointer;
 }
 button:hover{background:#e8e8e8;}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-top: 50px;
+  margin-right: auto;
+  width: 30%;
+}
+
+.no-results {
+    font-style: italic;
+    color: #666;
+}
+
+.total-itineraire { font-weight: bold; background-color: rgb(165, 174, 179) !important; }
+.total-global { font-weight: bold; background-color: #4c544d !important; color: white; }
 

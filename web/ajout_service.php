@@ -8,15 +8,15 @@ if($_SERVER["REQUEST_METHOD"] === "POST") {
     //echo $test;
     try {
         if(!isset($_POST["nom"]) || empty($_POST["nom"])) {
-            throw new RuntimeException("Le nom du service ne peut être vide");
+            throw new RuntimeException("Le nom du service ne peut être vide.");
         }
 
         if(!isset($_POST["date_debut"]) || empty($_POST["date_debut"])) {
-            throw new RuntimeException("Il est nécessaire d'introduire une date de début");
+            throw new RuntimeException("Il est nécessaire d'introduire une date de début.");
         } 
 
         if(!isset($_POST["date_fin"]) || empty($_POST["date_fin"])) {
-            throw new RuntimeException("Il est nécessaire d'introduire une date de fin");
+            throw new RuntimeException("Il est nécessaire d'introduire une date de fin.");
         }
 
         $datedebut = new Datetime($_POST["date_debut"]); 
@@ -24,7 +24,7 @@ if($_SERVER["REQUEST_METHOD"] === "POST") {
         $nom = trim($_POST["nom"]); 
 
         if($datefin < $datedebut) {
-            throw new RuntimeException("La date de fin ne peut pas être antérieure à la date du début");
+            throw new RuntimeException("La date de fin ne peut pas être antérieure à la date du début.");
         }
 
 
@@ -67,7 +67,7 @@ if($_SERVER["REQUEST_METHOD"] === "POST") {
                                 $code = 2;
                             }
                             else {
-                                throw new RuntimeException("Format invalide pour la définition des exceptions");
+                                throw new RuntimeException("Format invalide pour la définition des exceptions.");
                             }
                             $date_e = new Datetime($segments[0]);
                             if($date_e < $datedebut || $date_e > $datefin) {
@@ -77,7 +77,7 @@ if($_SERVER["REQUEST_METHOD"] === "POST") {
                         }
                         else 
                         {
-                            throw new RuntimeException("Format invalide pour la définition des exceptions");
+                            throw new RuntimeException("Format invalide pour la définition des exceptions.");
                         }
                     }
                 }
@@ -92,14 +92,15 @@ if($_SERVER["REQUEST_METHOD"] === "POST") {
             }
     
             $pdo->commit();
+            $message = "Le service a bien été ajouté.";
 
     
         }catch(Exception $e) {
-            echo "Erreur: ". $e->getMessage();    
+            $message = "Erreur: ". $e->getMessage();    
             $pdo->rollBack();
         }
     }catch(Exception $e) {
-        echo "Erreur: ". $e->getMessage();    
+    $message = "Erreur: ". $e->getMessage();    
     }
 
     
@@ -114,59 +115,81 @@ if($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="stylesheet" type="text/css" href="/style.css"/>
 </head>
 <body>
-<div class="container">
-    <h3>Ajout d'un service </h3>
-    <form method="post" action="Q3.php"> 
-        <label for="nom">Nom du service : </label><br/>
-        <input type="text" name="nom" id="nom"><br/>
 
-        <label for="date_debut">Date de début : </label><br/>
-        <input type="date" name="date_debut" id="date_debut"><br/>
+    <header>
+		<div class="navigation">
+			<a href="/index.php">Index</a>
+			<a href="/gestion_tables.php">Recherche</a>
+			<a href="/ajout_service.php" class="active">Ajout service</a>
+			<a href="/dates_service.php">Services disponibles</a>
+			<a href="/stats_temps_arret.php">Statistiques arrêt</a>
+			<a href="/recherche_gare.php">Recherche gare</a>
+			<a href="/gestion_iti_trajet.php">Gestion des itinéraires et trajets</a>
+			<a href="/modification_arret.php">Modifier arrêt</a>
+		</div>
+	</header>
 
-        <label for="date_fin">Date de fin : </label><br/>
-        <input type="date" name="date_fin" id="date_fin"><br/>
+    <div class="container">
 
-        <div class="day">
-            <label for="lundi">Lundi</label>
-            <input type="checkbox" name="lundi" value="lundi">
-        </div>
+        <?php if (!empty($message)): ?>
+            <div class="message <?php echo strpos($message, 'Erreur') === false ? 'success' : 'error'; ?>">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
 
-        <div class="day">
-            <label for="mardi"> Mardi</label>
-            <input type="checkbox" name="mardi" value="mardi">
-        </div>
-        
-        <div class="day">
-            <label for="mercredi">Mercredi</label><br>
-            <input type="checkbox" name="mercredi" value="mercredi">
-        </div>
+        <h1>Ajout d'un service </h1>
+        <form method="post" action="ajout_service.php"> 
+            <label for="nom">Nom du service : </label><br/>
+            <input type="text" name="nom" id="nom"><br/>
 
-        <div class="day">
-            <label for="jeudi"> Jeudi</label><br>
-            <input type="checkbox" name="jeudi" value="jeudi">
-        </div>
+            <label for="date_debut">Date de début : </label><br/>
+            <input type="date" name="date_debut" id="date_debut"><br/>
 
-        <div class="day">
-            <label for="vendredi"> Vendredi</label><br>
-            <input type="checkbox" name="vendredi" value="vendredi">
-        </div>
+            <label for="date_fin">Date de fin : </label><br/>
+            <input type="date" name="date_fin" id="date_fin"><br/>
+            
+            <div class="day">
+                <label for="lundi">Lundi</label>
+                <input type="checkbox" name="lundi" value="lundi">
+            </div>
 
-        <div class="day">
-            <label for="samedi"> Samedi</label><br>
-            <input type="checkbox" name="samedi" value="samedi">
-        </div>
+            <div class="day">
+                <label for="mardi"> Mardi</label>
+                <input type="checkbox" name="mardi" value="mardi">
+            </div>
+            
+            <div class="day">
+                <label for="mercredi">Mercredi</label>
+                <input type="checkbox" name="mercredi" value="mercredi">
+            </div>
 
-        <div class="day">
-            <label for="dimanche"> Dimanche</label><br>
-            <input type="checkbox" name="dimanche" value="dimanche">
-        </div>
+            <div class="day">
+                <label for="jeudi"> Jeudi</label>
+                <input type="checkbox" name="jeudi" value="jeudi">
+            </div>
 
-        <label for="exception"> Liste des exceptions : </label><br/>
-        <textarea row="5" name="exception" id="exception"></textarea>
-        <br/>
-        <input type="submit" value="Soumettre">
-    </form>
-</div>
+            <div class="day">
+                <label for="vendredi"> Vendredi</label>
+                <input type="checkbox" name="vendredi" value="vendredi">
+            </div>
+
+            <div class="day">
+                <label for="samedi"> Samedi</label>
+                <input type="checkbox" name="samedi" value="samedi">
+            </div>
+
+            <div class="day">
+                <label for="dimanche"> Dimanche</label>
+                <input type="checkbox" name="dimanche" value="dimanche">
+            </div>
+            
+
+            <label for="exception"> Liste des exceptions : </label><br/>
+            <textarea row="5" name="exception" id="exception"></textarea>
+            <br/>
+            <input type="submit" value="Soumettre">
+        </form>
+    </div>
 
 </body>
 </html>

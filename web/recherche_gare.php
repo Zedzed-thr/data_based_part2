@@ -8,6 +8,7 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $searchTerm = '';
 $minNumber = null;
 $results = [];
+$message = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $searchTerm = trim($_POST['search_term'] ?? '');
@@ -49,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $error = "Erreur lors de la recherche : " . $e->getMessage();
+            $message = "Erreur lors de la recherche : " . $e->getMessage();
         }
     }
 }
@@ -59,117 +60,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Recherche de gares</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #333;
-        }
-        form {
-            background: #f4f4f4;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="text"], input[type="number"] {
-            padding: 8px;
-            width: 300px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background: #333;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #555;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #333;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        .error {
-            color: red;
-            margin-bottom: 15px;
-        }
-        .no-results {
-            font-style: italic;
-            color: #666;
-        }
-    </style>
+    <title>Recherche de gares</title>      
+    <link rel="stylesheet" type="text/css" href="/style.css"/>
 </head>
 <body>
-    <h1>Recherche de gares</h1>
-    
-    <form method="post">
-        <label for="search_term">Nom de la gare :</label>
-        <input type="text" id="search_term" name="search_term" value="<?= htmlspecialchars($searchTerm) ?>" required>
+    <header>
+        <div class="navigation">
+            <a href="/index.php">Index</a>
+            <a href="/gestion_tables.php">Recherche</a>
+            <a href="/ajout_service.php">Ajout service</a>
+            <a href="/dates_service.php">Services disponibles</a>
+            <a href="/stats_temps_arret.php">Statistiques arrêt</a>
+            <a href="/recherche_gare.php" class="active">Recherche gare</a>
+            <a href="/gestion_iti_trajet.php">Gestion des itinéraires et trajets</a>
+            <a href="/modification_arret.php">Modifier arrêt</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <?php if (!empty($message)): ?>
+            <div class="message <?php echo strpos($message, 'Erreur') === false ? 'success' : 'error'; ?>">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+
+        <h1>Recherche de gares</h1>
         
-        <label for="min_number">Nombre minimum d'arrêts/arrivées/départs (optionel) :</label>
-        <input type="number" id="min_number" name="min_number" min="0" value="<?= $minNumber !== null ? htmlspecialchars($minNumber) : '' ?>">
+        <form method="post">
+            <label for="search_term">Nom de la gare :</label>
+            <input type="text" id="search_term" name="search_term" value="<?= htmlspecialchars($searchTerm) ?>" required>
+            
+            <label for="min_number">Nombre minimum d'arrêts/arrivées/départs (optionel) :</label>
+            <input type="number" id="min_number" name="min_number" min="0" value="<?= $minNumber !== null ? htmlspecialchars($minNumber) : '' ?>">
+            
+            <button type="submit">Rechercher</button>
+        </form>
         
-        <button type="submit">Rechercher</button>
-    </form>
-    
-    <?php if (isset($error)): ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-    
-    <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($searchTerm)): ?>
-        <div class="error">Veuillez entrer le nom d'une gare</div>
-    <?php elseif (!empty($results)): ?>
-        <h2>Résultats de la recherche</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Gare</th>
-                    <th>Service</th>
-                    <th>Nombre de trajets</th>
-                    <th>Nombre d'arrivées</th>
-                    <th>Nombre de départs</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($results as $row): ?>
+        <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($searchTerm)): ?>
+            <div class="error">Veuillez entrer le nom d'une gare</div>
+        <?php elseif (!empty($results)): ?>
+            <h2>Résultats de la recherche</h2>
+            <table>
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($row['nom_gare']) ?></td>
-                        <td><?= htmlspecialchars($row['nom_service']) ?></td>
-                        <td><?= htmlspecialchars($row['nb_trajets']) ?></td>
-                        <td><?= htmlspecialchars($row['nb_arrivees']) ?></td>
-                        <td><?= htmlspecialchars($row['nb_departs']) ?></td>
+                        <th>Gare</th>
+                        <th>Service</th>
+                        <th>Nombre de trajets</th>
+                        <th>Nombre d'arrivées</th>
+                        <th>Nombre de départs</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($results)): ?>
-        <p class="no-results">Aucun résultat trouvé pour cette gare.</p>
-    <?php endif; ?>
+                </thead>
+                <tbody>
+                    <?php foreach ($results as $row): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['nom_gare']) ?></td>
+                            <td><?= htmlspecialchars($row['nom_service']) ?></td>
+                            <td><?= htmlspecialchars($row['nb_trajets']) ?></td>
+                            <td><?= htmlspecialchars($row['nb_arrivees']) ?></td>
+                            <td><?= htmlspecialchars($row['nb_departs']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($results)): ?>
+            <p class="no-results">Aucun résultat trouvé pour cette gare.</p>
+        <?php endif; ?>
+    </div>
 </body>
 </html>

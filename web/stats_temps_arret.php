@@ -56,37 +56,73 @@ usort($results, function($a, $b) {
 <html>
 <head>
     <title>Statistiques temps d'arrêt</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        tr:nth-child(even) { background-color: rgb(222, 176, 24); }
-        .total-itineraire { font-weight: bold; background-color: rgb(23, 144, 200) !important; }
-        .total-global { font-weight: bold; background-color: #4CAF50 !important; color: white; }
-        th { background-color: #333; color: white; }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/style.css"/>
 </head>
 <body>
 
-<h1>Temps d'arrêt moyen par itinéraire</h1>
+<header>
+    <div class="navigation">
+        <a href="/index.php">Index</a>
+        <a href="/gestion_tables.php">Recherche</a>
+        <a href="/ajout_service.php">Ajout service</a>
+        <a href="/dates_service.php">Services disponibles</a>
+        <a href="/stats_temps_arret.php" class="active">Statistiques arrêt</a>
+        <a href="/recherche_gare.php">Recherche gare</a>
+        <a href="/gestion_iti_trajet.php">Gestion des itinéraires et trajets</a>
+        <a href="/modification_arret.php">Modifier arrêt</a>
+    </div>
+</header>
 
-<table>
-    <thead>
-        <tr>
-            <th>Itinéraire</th>
-            <th>Trajet</th>
-            <th>Temps moyen</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php 
-        $current_itineraire = null;
-        foreach ($results as $row): 
-            // On saute les lignes vides
-            if (empty($row['itineraire'])) continue;
+<div class="container">
+
+    <h1>Temps d'arrêt moyen par itinéraire</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Itinéraire</th>
+                <th>Trajet</th>
+                <th>Temps moyen</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+            $current_itineraire = null;
+            foreach ($results as $row): 
+                // On saute les lignes vides
+                if (empty($row['itineraire'])) continue;
+                
+                // Si c'est un nouvel itinéraire et que ce n'est pas le premier
+                if ($current_itineraire !== $row['itineraire'] && $current_itineraire !== null) {
+                    // On cherche la moyenne de l'itinéraire précédent
+                    foreach ($results as $moyenne_row) {
+                        if ($moyenne_row['itineraire'] === $current_itineraire && $moyenne_row['trajet'] === 'MOYENNE') {
+                            ?>
+                            <tr class="total-itineraire">
+                                <td><?= htmlspecialchars($moyenne_row['itineraire']) ?></td>
+                                <td>Moyenne</td>
+                                <td><?= $moyenne_row['temps_moyen'] ?></td>
+                            </tr>
+                            <?php
+                            break;
+                        }
+                    }
+                }
+                $current_itineraire = $row['itineraire'];
+                // On affiche seulement les trajets (pas les moyennes ici)
+                if ($row['trajet'] !== 'MOYENNE' && $row['itineraire'] !== 'TOTAL GLOBAL') {
+                    ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['itineraire']) ?></td>
+                        <td><?= htmlspecialchars($row['trajet']) ?></td>
+                        <td><?= $row['temps_moyen'] ?></td>
+                    </tr>
+                    <?php
+                }
+            endforeach; 
             
-            // Si c'est un nouvel itinéraire et que ce n'est pas le premier
-            if ($current_itineraire !== $row['itineraire'] && $current_itineraire !== null) {
-                // On cherche la moyenne de l'itinéraire précédent
+            // Afficher la moyenne du dernier itinéraire
+            if ($current_itineraire !== null && $current_itineraire !== 'TOTAL GLOBAL') {
                 foreach ($results as $moyenne_row) {
                     if ($moyenne_row['itineraire'] === $current_itineraire && $moyenne_row['trajet'] === 'MOYENNE') {
                         ?>
@@ -100,51 +136,24 @@ usort($results, function($a, $b) {
                     }
                 }
             }
-            $current_itineraire = $row['itineraire'];
-            // On affiche seulement les trajets (pas les moyennes ici)
-            if ($row['trajet'] !== 'MOYENNE' && $row['itineraire'] !== 'TOTAL GLOBAL') {
-                ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['itineraire']) ?></td>
-                    <td><?= htmlspecialchars($row['trajet']) ?></td>
-                    <td><?= $row['temps_moyen'] ?></td>
-                </tr>
-                <?php
-            }
-        endforeach; 
-        
-        // Afficher la moyenne du dernier itinéraire
-        if ($current_itineraire !== null && $current_itineraire !== 'TOTAL GLOBAL') {
-            foreach ($results as $moyenne_row) {
-                if ($moyenne_row['itineraire'] === $current_itineraire && $moyenne_row['trajet'] === 'MOYENNE') {
+            
+            // Afficher le total global
+            foreach ($results as $row) {
+                if ($row['itineraire'] === 'TOTAL GLOBAL') {
                     ?>
-                    <tr class="total-itineraire">
-                        <td><?= htmlspecialchars($moyenne_row['itineraire']) ?></td>
-                        <td>Moyenne</td>
-                        <td><?= $moyenne_row['temps_moyen'] ?></td>
+                    <tr class="total-global">
+                        <td>Total global</td>
+                        <td></td>
+                        <td><?= $row['temps_moyen'] ?></td>
                     </tr>
                     <?php
                     break;
                 }
             }
-        }
-        
-        // Afficher le total global
-        foreach ($results as $row) {
-            if ($row['itineraire'] === 'TOTAL GLOBAL') {
-                ?>
-                <tr class="total-global">
-                    <td>Total global</td>
-                    <td></td>
-                    <td><?= $row['temps_moyen'] ?></td>
-                </tr>
-                <?php
-                break;
-            }
-        }
-        ?>
-    </tbody>
-</table>
+            ?>
+        </tbody>
+    </table>
+</div>
 
 </body>
 </html>

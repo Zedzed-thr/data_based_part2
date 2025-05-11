@@ -134,6 +134,20 @@ if (isset($_POST['update_stop'])) { // si l'utilisateur fait le choix de modifie
     <link rel="stylesheet"  type="text/css" href="/style.css"/>
 </head>
 <body>
+    
+    <header>
+        <div class="navigation">
+            <a href="/index.php">Index</a>
+            <a href="/gestion_tables.php">Recherche</a>
+            <a href="/ajout_service.php">Ajout service</a>
+            <a href="/dates_service.php">Services disponibles</a>
+            <a href="/stats_temps_arret.php">Statistiques arrêt</a>
+            <a href="/recherche_gare.php">Recherche gare</a>
+            <a href="/gestion_iti_trajet.php">Gestion des itinéraires et trajets</a>
+            <a href="/modification_arret.php" class="active">Modifier arrêt</a>
+        </div>
+    </header>
+
     <div class="container">
         <h1>Modification d'un arrêt</h1>
         
